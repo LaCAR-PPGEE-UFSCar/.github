@@ -16,7 +16,7 @@ This repository is public: rules and templates only, never project data.
 |---|---|
 | `.github/workflows/*.yml` | Reusable workflows (`on: workflow_call`): `docs-header`, `adr-guard`, `runbook-check`, `pr-stack-guard`, `enforce-pr-source`, `archive-merged-branch`. `governance-self.yml` runs them on this repository's own PRs. |
 | `.github/scripts/` | `check_md_header.py` (markdown header table) and `adr_guard.py` (guarded decisions), fetched by the reusable workflows. |
-| `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/` | Default PR template and the issue forms "Task" and "Brand approval", for repositories that have none of their own. |
+| `.github/pull_request_template.md`, `.github/ISSUE_TEMPLATE/` | Default PR template and the issue form "Task", for repositories that have none of their own. |
 | `profile/README.md` | The organization's public page. |
 
 ## Use it
