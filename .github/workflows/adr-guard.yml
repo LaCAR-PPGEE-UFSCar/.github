@@ -1,0 +1,38 @@
+# @file adr-guard.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Reusable check: fail a PR that changes a guarded structural decision without an ADR.
+#
+# Called from each lab repository by .github/workflows/governance.yml. Reads
+# the calling repository's manifest .github/adr-guard.yml with adr_guard.py
+# from this kit, over the PR range and body. Check name: "adr-guard / check".
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: adr-guard
+
+on:
+  workflow_call:
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: LaCAR-PPGEE-UFSCar/.github
+          ref: main
+          path: .kit
+      - name: Install PyYAML
+        run: python3 -m pip install --quiet pyyaml
+      - name: Save the PR body
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: printf '%s' "$PR_BODY" > "$RUNNER_TEMP/pr_body.txt"
+      - name: Check guarded decisions
+        run: python3 .kit/.github/scripts/adr_guard.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" "$RUNNER_TEMP/pr_body.txt"

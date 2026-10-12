@@ -1,0 +1,31 @@
+# @file enforce-pr-source.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Reusable check: fail any PR into main whose head branch is not develop.
+#
+# Branch protection cannot restrict a PR's source branch, so this check
+# enforces the develop -> main flow. The caller runs it only for PRs whose
+# base is main. Check name: "pr-source / check".
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: pr-source
+
+on:
+  workflow_call:
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check that head branch is develop
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if [ "$HEAD_REF" != "develop" ]; then
+            echo "::error::PRs into main must come from develop (this PR is from '$HEAD_REF'). Merge into develop first."
+            exit 1
+          fi
+          echo "OK: head branch is develop."

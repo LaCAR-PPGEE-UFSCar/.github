@@ -1,0 +1,38 @@
+# @file governance-self.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief The kit checks its own PRs with its own reusable workflows (the caller of lacar_repo_template, with local paths).
+#
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: governance
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited, closed]
+
+jobs:
+  docs-header:
+    if: github.event.action != 'closed'
+    uses: ./.github/workflows/docs-header.yml
+  adr-guard:
+    if: github.event.action != 'closed'
+    uses: ./.github/workflows/adr-guard.yml
+  runbook-check:
+    if: github.event.action != 'closed'
+    uses: ./.github/workflows/runbook-check.yml
+  pr-stack-guard:
+    if: github.event.action != 'closed'
+    permissions:
+      pull-requests: read
+    uses: ./.github/workflows/pr-stack-guard.yml
+  pr-source:
+    if: github.event.action != 'closed' && github.base_ref == 'main'
+    uses: ./.github/workflows/enforce-pr-source.yml
+  archive:
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true && github.event.pull_request.head.ref != 'develop'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/archive-merged-branch.yml

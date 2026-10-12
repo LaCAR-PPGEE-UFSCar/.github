@@ -1,0 +1,33 @@
+# @file docs-header.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Reusable check: fail a PR that edits a Markdown file without its Author / Last editor / Last modified table up to date.
+#
+# Called from each lab repository by .github/workflows/governance.yml
+# (uses: LaCAR-PPGEE-UFSCar/.github/.github/workflows/docs-header.yml@main).
+# Checks out the calling repository, then this kit for the script, and runs
+# check_md_header.py over the PR range. Check name: "docs-header / check".
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: docs-header
+
+on:
+  workflow_call:
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: LaCAR-PPGEE-UFSCar/.github
+          ref: main
+          path: .kit
+      - name: Check markdown headers
+        run: python3 .kit/.github/scripts/check_md_header.py "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}"

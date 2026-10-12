@@ -1,0 +1,85 @@
+# @file pr-stack-guard.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Reusable check: fail a PR whose "Depends on" line is missing or whose stack order is wrong.
+#
+# Every PR body opens with a "## Depends on" section (pull_request_template.md)
+# that says either "n/a" or "Depends on #N". This check reads it and:
+#   - "n/a"            -> the PR must target develop or main (a PR into a
+#                         feature branch is a stacked PR and must say so).
+#   - "Depends on #N"  -> while #N is open, this PR must target #N's head
+#                         branch; once #N is merged, this PR must target
+#                         develop (GitHub retargets it when #N's branch is
+#                         deleted; the author then rebases). A PR that
+#                         targets develop while #N is still open is out of
+#                         order and fails. #N closed without merge fails.
+# A review can still be given out of order; the merge cannot, once this is a
+# required status check on develop. The caller runs it on 'edited' too, so a
+# fixed body or a retarget re-evaluates, and gives the job permissions:
+# pull-requests: read. Check name: "pr-stack-guard / check".
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: pr-stack-guard
+
+on:
+  workflow_call:
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Read "Depends on" and check the order
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          section=$(printf '%s\n' "$PR_BODY" | awk '
+            /^## Depends on[[:space:]]*$/ {on=1; next}
+            on && /^## / {exit}
+            on {print}')
+          if [ -z "$(printf '%s' "$section" | tr -d '[:space:]')" ]; then
+            echo "::error::PR body has no '## Depends on' section: write 'n/a' or 'Depends on #N' there."
+            exit 1
+          fi
+          # Comments from the template do not count as an answer.
+          text=$(printf '%s\n' "$section" | sed 's/<!--.*-->//g')
+          dep=$(printf '%s\n' "$text" | grep -oiE 'depends on #[0-9]+' | head -n1 | grep -oE '[0-9]+' || true)
+          if [ -z "$dep" ]; then
+            if printf '%s\n' "$text" | grep -qiE '(^|[^a-z])n/a([^a-z]|$)'; then
+              case "$BASE_REF" in
+                develop|main) echo "OK: no dependency, targets $BASE_REF"; exit 0 ;;
+                *) echo "::error::PR #$PR_NUMBER targets '$BASE_REF' but declares no dependency. A PR into a feature branch is stacked: write 'Depends on #N' (N = the PR of '$BASE_REF')."; exit 1 ;;
+              esac
+            fi
+            echo "::error::'## Depends on' must say 'n/a' or 'Depends on #N' (found: $(printf '%s' "$text" | tr -s '[:space:]' ' '))."
+            exit 1
+          fi
+          if [ "$dep" = "$PR_NUMBER" ]; then
+            echo "::error::PR #$PR_NUMBER cannot depend on itself."; exit 1
+          fi
+          parent=$(gh api "repos/$REPO/pulls/$dep" --jq '{state: .state, merged: .merged, head: .head.ref, base: .base.ref}') || {
+            echo "::error::'Depends on #$dep' but PR #$dep was not found in $REPO."; exit 1; }
+          p_state=$(printf '%s' "$parent" | jq -r .state)
+          p_merged=$(printf '%s' "$parent" | jq -r .merged)
+          p_head=$(printf '%s' "$parent" | jq -r .head)
+          echo "#$PR_NUMBER depends on #$dep (state=$p_state merged=$p_merged head=$p_head); this PR targets '$BASE_REF'"
+          if [ "$p_merged" = "true" ]; then
+            case "$BASE_REF" in
+              develop|main) echo "OK: #$dep is merged and this PR now targets $BASE_REF (rebase onto origin/$BASE_REF if not done)"; exit 0 ;;
+              *) echo "::error::#$dep is merged but this PR still targets '$BASE_REF'. Retarget to develop and rebase: git rebase --onto origin/develop <old #$dep head>."; exit 1 ;;
+            esac
+          fi
+          if [ "$p_state" = "closed" ]; then
+            echo "::error::#$dep was closed without merge. Re-point 'Depends on' or close this PR too."; exit 1
+          fi
+          if [ "$BASE_REF" = "$p_head" ]; then
+            echo "OK: #$dep is open and this PR targets its branch '$p_head'. It merges after #$dep."; exit 0
+          fi
+          echo "::error::Out of order: #$dep is still open (branch '$p_head') but this PR targets '$BASE_REF'. Merge #$dep first, or retarget this PR to '$p_head'."
+          exit 1

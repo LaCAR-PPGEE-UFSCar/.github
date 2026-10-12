@@ -1,0 +1,9 @@
+# @file CODEOWNERS
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Reviewers of the governance kit itself.
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+* @Villela-G @carmonaroom

@@ -1,0 +1,38 @@
+# @file runbook-check.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Reusable check: fail a feat PR that adds or changes no runbook under docs/runbooks/.
+#
+# One feature = one PR = one runbook. Runs on PRs whose title starts with
+# "feat" (Conventional Commits type). Check name: "runbook-check / check".
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: runbook-check
+
+on:
+  workflow_call:
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Feat PRs must touch docs/runbooks/
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if ! printf '%s' "$TITLE" | grep -Eq '^feat(\(|:|!)'; then
+            echo "not a feat PR ('$TITLE'): nothing to check"; exit 0
+          fi
+          if git diff --name-only "$(git merge-base "$BASE" "$HEAD")..$HEAD" | grep -q '^docs/runbooks/'; then
+            echo "OK: runbook present"; exit 0
+          fi
+          echo "::error::feat PR without a runbook: create or update a file under docs/runbooks/ in this PR (docs/runbooks/README.md)"
+          exit 1

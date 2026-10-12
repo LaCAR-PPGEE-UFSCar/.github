@@ -1,0 +1,34 @@
+# @file task.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Issue form "Task": every unit of work starts here, before any branch (ADR-0007).
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: Task
+description: One unit of work that will end in one pull request.
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      description: The behaviour to add or fix, from the user's point of view. One unit of work; if it needs two runbooks, open two issues.
+    validations:
+      required: true
+  - type: textarea
+    id: done
+    attributes:
+      label: Done when
+      description: How the reviewer will know it works (what runs, what is measured, which runbook).
+    validations:
+      required: true
+  - type: input
+    id: depends
+    attributes:
+      label: Depends on
+      description: Issue or PR number this work waits for, or n/a.
+      placeholder: n/a
+  - type: markdown
+    attributes:
+      value: "Assign yourself and move the card to In progress. The PR that finishes this issue cites `Closes #N`."

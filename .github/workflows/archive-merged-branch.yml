@@ -1,0 +1,38 @@
+# @file archive-merged-branch.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Reusable job: tag the head of every merged PR branch as archive/<branch> before it is deleted.
+#
+# Feature PRs are squash-merged and their branches auto-deleted, so the
+# detailed history would become unreachable. The caller runs this on PR
+# close when merged; it creates a lightweight tag archive/<head branch with
+# "/" replaced by "-"> on the last commit of the branch. Read it back with:
+# git fetch --tags && git log archive/<name>. The caller job needs
+# permissions: contents: write.
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: archive-merged-branch
+
+on:
+  workflow_call:
+
+jobs:
+  tag:
+    name: tag
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create the archive tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          TAG="archive/${HEAD_REF//\//-}"
+          if gh api "repos/$REPO/git/refs" -f ref="refs/tags/$TAG" -f sha="$HEAD_SHA" --silent; then
+            echo "tagged $TAG at $HEAD_SHA"
+          else
+            echo "::warning::could not create $TAG (it may already exist); head was $HEAD_SHA"
+          fi

@@ -1,0 +1,13 @@
+# @file config.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Issue chooser of every lab repository: forms only, no blank issues.
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+blank_issues_enabled: false
+contact_links:
+  - name: Lab project boards
+    url: https://github.com/orgs/LaCAR-PPGEE-UFSCar/projects
+    about: Tasks without code (purchases, bureaucracy, meetings) are draft items on the board, never issues.

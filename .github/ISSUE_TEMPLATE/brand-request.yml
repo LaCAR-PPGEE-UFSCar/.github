@@ -1,0 +1,45 @@
+# @file brand-request.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Issue form "Brand approval": nothing with the lab's name goes out without this request (field ids are read by the brand check).
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+name: Brand approval
+description: Slides, poster, paper, post or any material that shows the lab's name or logo.
+title: "brand: "
+labels: ["brand"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Google Slides (copy of the official template, in the lab Drive)
+        - LaTeX (source in this repository, lacar class)
+        - PDF, image or post (file in the lab Drive)
+    validations:
+      required: true
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: Google Drive link to the file (Slides, PDF, image) or path in this repository (LaTeX).
+      placeholder: https://drive.google.com/...
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where and when it will be shown
+      placeholder: CBA 2026, 12 Oct, oral session
+    validations:
+      required: true
+  - type: checkboxes
+    id: template
+    attributes:
+      label: Template
+      options:
+        - label: Made from the official template of the lab (lacar-brand), logo and colours untouched.
+          required: true

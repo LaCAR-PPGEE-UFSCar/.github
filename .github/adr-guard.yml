@@ -1,0 +1,14 @@
+# @file adr-guard.yml
+# @author Guilherme Villela (villela.guilherme@usp.br)
+# @brief Guarded decisions of the kit itself: the reusable workflows, and the scripts.
+# @version 0.1
+# @date 2026-10-08
+#
+# @copyright Copyright (c) 2026
+
+adrs:
+  - id: ADR-0001
+    title: Lab governance as reusable workflows in the public organization .github repository
+    paths:
+      - ".github/workflows/**"
+      - ".github/scripts/**"
