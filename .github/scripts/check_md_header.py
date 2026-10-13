@@ -7,11 +7,13 @@
 Usage: check_md_header.py <base_sha> <head_sha>
 For every .md added or modified between base and head, the first 6 lines
 must contain the table "| Author | Last editor | Last modified |" followed
-by a data row whose date (YYYY-MM-DD) is not older than the commit date of
-the merge base (the branch point). Rule 10 of the coding standard in CLAUDE.md.
+by a data row whose date (YYYY-MM-DD) is not older than the last commit of
+the branch that edited that file (author date, merge commits skipped). Author
+dates survive a rebase and an update from develop, so neither of them asks
+for a new date: only an edit does. Rule 10 of the coding standard in CLAUDE.md.
 Templates pasted into PR/issue bodies and the organization profile README are exempt.
-@version 0.3
-@date 2026-10-05
+@version 0.4
+@date 2026-10-13
 
 @copyright Copyright (c) 2026
 """
@@ -48,8 +50,9 @@ def main(base, head):
         if not m.group("author").strip() or not m.group("editor").strip():
             failures.append(f"{path}: author and last editor cannot be empty")
             continue
-        if m.group("date") < floor:
-            failures.append(f"{path}: Last modified {m.group('date')} is older than the branch point {floor}; update it")
+        edited = git("log", "-1", "--no-merges", "--format=%as", f"{merge_base}..{head}", "--", path) or floor
+        if m.group("date") < edited:
+            failures.append(f"{path}: Last modified {m.group('date')} is older than its last edit on this branch ({edited}); update it")
     for f in failures:
         print(f"::error::{f}")
     print(f"checked {sum(p.endswith('.md') and not p.startswith(templates) for p in changed)} markdown file(s), {len(failures)} failure(s)")
