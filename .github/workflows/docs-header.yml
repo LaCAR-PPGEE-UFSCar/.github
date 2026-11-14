@@ -6,7 +6,10 @@
 # (uses: LaCAR-PPGEE-UFSCar/.github/.github/workflows/docs-header.yml@main).
 # Checks out the calling repository, then this kit for the script, and runs
 # check_md_header.py over the PR range. Check name: "docs-header / check".
-# @version 0.1
+# Skipped on PRs into main: their range is the whole release, made of squash
+# commits dated when they merged, and each file was already checked in its
+# own PR into develop. A skipped job counts as passed for the protection.
+# @version 0.2
 # @date 2026-10-08
 #
 # @copyright Copyright (c) 2026
@@ -19,6 +22,7 @@ on:
 jobs:
   check:
     name: check
+    if: github.event.pull_request.base.ref != 'main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

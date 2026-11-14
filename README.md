@@ -1,6 +1,6 @@
 | Author | Last editor | Last modified |
 |---|---|---|
-| Guilherme Villela | Guilherme Villela | 2026-10-12 |
+| Guilherme Villela | Guilherme Villela | 2026-11-09 |
 
 # LaCAR governance kit
 
@@ -42,6 +42,12 @@ Check names the protection expects: `docs-header / check`, `adr-guard / check`,
 `runbook-check / check`, `pr-stack-guard / check` on `develop`; `main` adds
 `pr-source / check`.
 
+`docs-header` is skipped on PRs into `main` (the protection counts a skipped
+job as passed): a release range is made of the squash commits on `develop`,
+dated when each PR merged, so comparing them with the header dates would fail
+every file that waited a day in review. Each file was already checked in its
+own PR into `develop`.
+
 ## Change a rule
 
 Open a PR into `develop` here; `governance-self.yml` runs the same checks on
@@ -54,5 +60,6 @@ protection updated (`tools/repo-settings.sh <owner/repo>`).
 | Symptom | Cause | Fix |
 |---|---|---|
 | Caller fails with "workflow was not found" | This repository became private | Keep it public: callers in private repositories read it without a token |
+| `docs-header` fails a release PR into `main` with "older than its last edit" | The caller runs a kit older than the skip on `main` (#7) | Release the kit (`develop` → `main`), then re-run the check |
 | `docs-header` fails on a template | A `.md` under `.github/ISSUE_TEMPLATE/` or `profile/` gained a header table | Those files are exempt by path; remove the table |
 | Protection rejects the context | Check never ran on that branch yet | Merge the caller first, then run `tools/repo-settings.sh` |
